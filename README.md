@@ -1,132 +1,153 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# ISP Manager - Backend API REST
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Sistema de gestión integral para Proveedores de Servicios de Internet (ISP). Permite administrar el catálogo de planes comerciales, el padrón de abonados, el monitoreo operativo y la mesa de ayuda técnica (tickets), junto con el control de acceso y roles de operadores.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Proyecto desarrollado para la cátedra **Programación 4** — **Universidad Tecnológica Nacional - Facultad Regional Tucumán (UTN-FRT)**.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Equipo de Desarrollo
 
-## Project setup
+* **Eduardo Albarracín** — [@EduardoA10](https://github.com/EduardoA10)
+* **Alexis Lencina** — [@AlexisLencina-prog](https://github.com/AlexisLencina-prog)
 
-```bash
-$ npm install
+---
+
+## Tecnologías Utilizadas
+
+* **Framework Backend:** NestJS v12 (Node.js + TypeScript)
+* **Resolución de Módulos:** CommonJS con tipado estricto
+* **Base de Datos:** PostgreSQL (Relacional)
+* **Gestión de Configuración:** `@nestjs/config` (Variables de entorno)
+* **Pruebas y Documentación de API:** Postman & Vitest
+
+---
+
+## Arquitectura y Estructura de Carpetas
+
+El proyecto sigue una arquitectura modular orientada al dominio. En la raíz de `src/` reside únicamente el punto de entrada `main.ts`, mientras que el módulo raíz (`app`) y los recursos de negocio se organizan dentro de `src/modules/`:
+
+```text
+manager-isp-backend/
+├── database/
+│   ├── 01_init_schema_parte1.sql   # DDL y semillas de users y plans
+│   └── 02_init_schema_parte2.sql   # DDL y semillas de customers y tickets
+├── src/
+│   ├── main.ts                     # Punto de entrada y configuración del puerto
+│   └── modules/
+│       ├── app/                    # Módulo raíz (AppModule, AppController, AppService)
+│       ├── auth/                   # Autenticación (Login y Registro)
+│       ├── users/                  # Gestión de operadores y técnicos NOC
+│       ├── customers/              # Padrón de abonados del servicio
+│       ├── plans/                  # Catálogo comercial de conectividad
+│       └── tickets/                # Mesa de ayuda y reclamos técnicos
+├── test/                           # Pruebas End-to-End (E2E)
+├── .env                            # Variables de entorno locales (ignorado por Git)
+├── .gitignore
+├── nest-cli.json
+├── package.json
+└── tsconfig.json
 ```
 
-## Compile and run the project
+Cada recurso dentro de `src/modules/` contiene sus respectivas capas:
+* `dto/`: Objetos de transferencia de datos (`create-*.dto.ts` y `update-*.dto.ts`).
+* `entities/`: Representación de las entidades del dominio.
+* `*.controller.ts`: Definición de rutas y verbos HTTP (`GET`, `POST`, `PATCH`, `DELETE`).
+* `*.service.ts`: Lógica de negocio e interacción con la capa de datos.
+* `*.module.ts`: Encapsulamiento e inyección de dependencias, importados de forma centralizada en `AppModule`.
 
-```bash
-# development
-$ npm run start
+---
 
-# watch mode
-$ npm run start:dev
+## Diseño de la Base de Datos (PostgreSQL)
 
-# production mode
-$ npm run start:prod
+El modelo relacional se compone de 4 tablas principales vinculadas mediante integridad referencial:
+
+```text
+[ plans ] 1 ────< N [ customers ] 1 ────< N [ tickets ] N >──── 1 [ users ]
 ```
 
-## Run tests
+### Entidades y Relaciones
+
+1. **`users`**: Almacena administradores, operadores y técnicos de guardia NOC (`id` PK, `email` UNIQUE, `role`).
+2. **`plans`**: Catálogo de velocidades de bajada/subida en Mbps y tarifas mensuales (`id` PK).
+3. **`customers`**: Abonados del ISP (`id` PK, `dni` UNIQUE, `ip_address` UNIQUE, `status`).
+   * **FK `plan_id` $\rightarrow$ `plans(id)`** (`ON DELETE RESTRICT`): Impide eliminar un plan si tiene clientes activos asociados.
+4. **`tickets`**: Reclamos técnicos de soporte (`id` PK, `category`, `priority`, `status`, `description`).
+   * **FK `customer_id` $\rightarrow$ `customers(id)`** (`ON DELETE CASCADE`): Elimina los tickets asociados si se da de baja definitiva al cliente.
+   * **FK `assigned_user_id` $\rightarrow$ `users(id)`** (`ON DELETE SET NULL`): Conserva el ticket sin técnico asignado si el operador es dado de baja.
+
+---
+
+## Instalación y Puesta en Marcha
+
+### 1. Clonar el repositorio e instalar dependencias
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone [https://github.com/EduardoA10/manager-isp-backend.git](https://github.com/EduardoA10/manager-isp-backend.git)
+cd manager-isp-backend
+npm install
 ```
 
-## Deployment
+### 2. Configurar Variables de Entorno
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+```env
+PORT=4000
+DATABASE_URL=postgresql://usuario:password@localhost:5432/isp_manager_db
+API_BASE_URL=http://localhost:4000/
+```
+
+### 3. Inicializar la Base de Datos
+
+1. Crear una base de datos vacía en PostgreSQL (pgAdmin 4) llamada `isp_manager_db`.
+2. Ejecutar en el **Query Tool** los scripts de la carpeta `database/` en orden secuencial:
+   * Primero: `database/01_init_schema_parte1.sql` (crea `users` y `plans` + 5 registros semilla por tabla).
+   * Segundo: `database/02_init_schema_parte2.sql` (crea `customers` y `tickets` + 5 registros semilla por tabla).
+
+### 4. Ejecutar el Servidor
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Modo desarrollo (watch mode)
+npm run start:dev
+
+# Compilación para producción
+npm run build
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+El servidor quedará escuchando en `http://localhost:4000`.
 
-## Observability
+---
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+## Endpoints Base (API REST)
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+Prefijos de rutas configurados en los controladores de cada recurso:
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+| Módulo | Ruta Base | Métodos Soportados |
+| :--- | :--- | :--- |
+| **Root** | `/` | `GET` (Health check) |
+| **Auth** | `/modules/auth` | `GET`, `POST`, `PATCH`, `DELETE` |
+| **Users** | `/modules/users` | `GET`, `POST`, `PATCH`, `DELETE` |
+| **Customers** | `/modules/customers` | `GET`, `POST`, `PATCH`, `DELETE` |
+| **Plans** | `/modules/plans` | `GET`, `POST`, `PATCH`, `DELETE` |
+| **Tickets** | `/modules/tickets` | `GET`, `POST`, `PATCH`, `DELETE` |
 
-To add it to this project, run this and approve the code it prints at [observe.nestjs.com/link](https://observe.nestjs.com/link) - signing up for free if you have no account:
+---
 
-```bash
-$ npx @nestjs/observe link
-```
+## Estrategia de Ramas (Git Workflow)
 
-It installs `@nestjs/observe`, wires it into `AppModule` and `main.ts`, and writes the app key and secret into `.env`, which every `nest start` script (`start`, `start:dev`, `start:debug`) then loads. In production, set `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment instead.
+El repositorio mantiene protegidas las ramas principales y canaliza todo cambio mediante Pull Requests revisados entre pares:
 
-Or do it by hand:
+* **`main`**: Rama estable de producción / entregas cerradas.
+* **`dev`**: Rama principal de integración del desarrollo.
+* **`feature/nombre-funcionalidad`**: Desarrollo de nuevas características o módulos.
+* **`fix/nombre-correccion`**: Resolución de errores o bugs.
+* **`refactor/nombre-cambio`**: Mejoras estructurales y optimización de código sin alterar comportamiento.
+* **`docs/nombre-documentacion`**: Creación y actualización de documentación técnica.
 
-```bash
-$ npm install @nestjs/observe
-```
+---
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/sdk) - it takes a single import and an app key.
+## Documentación y Pruebas con Postman
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+El equipo cuenta con una colección compartida en Postman (`ISP MANAGER API - TP9`) configurada con la variable de entorno `{{baseUrl}}` apuntando a `http://localhost:4000` para validar las respuestas CRUD de cada módulo.
