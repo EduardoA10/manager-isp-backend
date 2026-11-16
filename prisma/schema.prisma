@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(100)
+  email      String   @unique @db.VarChar(150)
+  password   String   @db.VarChar(255)
+  role       String   @default("operador_noc") @db.VarChar(50)
+  created_at DateTime @default(now())
+
+  tickets Ticket[]
+
+  @@map("users")
+}
+
+model Plan {
+  id             Int      @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  download_speed Int
+  upload_speed   Int
+  price          Decimal  @db.Decimal(10, 2)
+  created_at     DateTime @default(now())
+  description String? @db.VarChar(255)
+
+  customers Customer[]
+
+  @@map("plans")
+}
+
+model Customer {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(100)
+  dni        String   @unique @db.VarChar(20)
+  email      String   @db.VarChar(150)
+  ip_address String   @unique @db.VarChar(45)
+  status     String   @default("Habilitado") @db.VarChar(50)
+  plan_id    Int
+  created_at DateTime @default(now())
+
+  plan    Plan     @relation(fields: [plan_id], references: [id], onDelete: Restrict)
+  tickets Ticket[]
+
+  @@map("customers")
+}
+
+model Ticket {
+  id               Int      @id @default(autoincrement())
+  customer_id      Int
+  assigned_user_id Int?
+  category         String   @db.VarChar(100)
+  priority         String   @default("Media") @db.VarChar(50)
+  status           String   @default("Abierto") @db.VarChar(50)
+  description      String   @db.Text
+  created_at       DateTime @default(now())
+
+  customer      Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  assigned_user User?    @relation(fields: [assigned_user_id], references: [id], onDelete: SetNull)
+
+  @@map("tickets")
+}
