@@ -2,6 +2,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
   MaxLength,
@@ -30,4 +31,11 @@ export class CreatePlanDto {
   )
   @IsPositive({ message: 'El precio del plan debe ser mayor a 0' })
   price: number;
+
+  @IsOptional()
+  @IsString({ message: 'La descripción debe ser una cadena de texto' })
+  @MaxLength(255, {
+    message: 'La descripción no puede superar los 255 caracteres',
+  })
+  description?: string;
 }
