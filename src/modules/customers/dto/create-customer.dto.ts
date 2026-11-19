@@ -43,4 +43,9 @@ export class CreateCustomerDto {
   @IsInt({ message: 'El ID del plan debe ser un número entero' })
   @IsPositive({ message: 'El ID del plan debe ser mayor a 0' })
   plan_id: number;
+
+  @IsOptional()
+@IsString({ message: 'El teléfono debe ser texto' })
+@MaxLength(30, { message: 'El teléfono no puede superar los 30 caracteres' })
+phone?: string;
 }
