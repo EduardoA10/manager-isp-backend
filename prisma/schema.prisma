@@ -42,6 +42,7 @@ model Customer {
   ip_address String   @unique @db.VarChar(45)
   status     String   @default("Habilitado") @db.VarChar(50)
   plan_id    Int
+  phone      String?  @db.VarChar(30)
   created_at DateTime @default(now())
 
   plan    Plan     @relation(fields: [plan_id], references: [id], onDelete: Restrict)
